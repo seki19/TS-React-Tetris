@@ -1,4 +1,3 @@
-import { type } from 'os';
 import React, { useEffect } from 'react';
 import Stage from './components/Stage';
  
@@ -102,10 +101,11 @@ let block_current_sx, block_current_sy;
 let blockType;
 let timer1;
 let FPS: number;
+let clearLine: number;
 
 const initGame = () => {
   FPS = 30;
-  let clearLine = 0;
+  clearLine = 0;
   let canvasDom = document.getElementById("canvas")!;
   if (canvasDom instanceof HTMLCanvasElement) {
     canvasDom.width = SCREEN_WIDTH;
@@ -161,11 +161,10 @@ const createBlock = () => {
     }
   }
 
-  //
-  // if (hitCheck()) {
-  //   mode = GAMEOVER;
-  //   console.log("GAMEOVER!");
-  // }
+  if (hitCheck()) {
+    mode = GAMEOVER;
+    console.log("GAMEOVER!");
+  }
   putBlock();
 }
 
@@ -176,6 +175,45 @@ const clearBlock = () => {
       if (oBlock[i][j]) field[i + block_current_y][j + block_current_x] = NON_BLOCK;
     }
   }
+}
+
+const lockBlock = () => {
+  if (mode === EFFECT) return;
+  for (let i = 0; i < 4; i++) {
+    for (let j = 0; j < 4; j++) {
+      if (oBlock[i][j]) field[i + block_current_y][j + block_current_x] = LOCK_BLOCK;
+    }
+  }
+}
+
+const hitCheck = (): 1 | void => {
+  if (mode === EFFECT) return;
+  for (let i = 0; i < 4; i++) {
+    for (let j = 0; j < 4; j++) {
+      if (field[i + block_current_y][j + block_current_x] && oBlock[i][j]) return 1;
+    }
+  }
+}
+
+const lineCheck = (): number | void => {
+  if (mode === EFFECT) return;
+  let count;
+  let lineCount = 0;
+  for (let i = 0; i < BLOCK_RAWS - 2; i++) {
+    count = 0;
+    for (let j = 0; j < BLOCK_COLS; j++) {
+      if (field[i][j]) count++;
+      else break;
+    }
+    if (count >= BLOCK_COLS) {
+      lineCount++;
+      clearLine++;
+      for (let j = 0; j < BLOCK_COLS - 1; j++) field[i][j] = CLEAR_BLOCK;
+      console.log("lineCount = " + lineCount);
+      console.log("clearLine = " + clearLine);
+    }
+  }
+  return lineCount;
 }
 
 const putBlock = () => {
@@ -244,23 +282,34 @@ const mainLoop = () => {
     if (frame % speed == 0) {
       clearBlock();
       block_current_y++;
-      // if (hitCheck()) {
-      //   block_current_y = block_current_sy;
-      //   // loclBlock();
-      //   // if (lineCheck() > 0) {
-      //     // mode = EFFECT;
-      //   // }
-      //   createBlock();
-      // }
+      if (hitCheck()) {
+        block_current_y = block_current_sy;
+        lockBlock();
+        if (lineCheck() > 0) {
+          mode = EFFECT;
+        }
+        createBlock();
+      }
       putBlock();
     }
     draw();
-    timer1 = setTimeout(mainLoop, 1000/FPS);
   }
+  else if (mode === GAMEOVER) {
+
+  }
+  else if (mode === EFFECT) {
+    if (frame % effectState.speed === 0) {
+      
+    }
+  }
+  frame++;
+  if (speed < 1) speed = 1;
+  timer1 = setTimeout(mainLoop, 1000/FPS);
 }
 
 const App: React.VFC = () => {
   useEffect(() => {
+    console.log("game start");
     initGame();
     newGame();
   }, [])
