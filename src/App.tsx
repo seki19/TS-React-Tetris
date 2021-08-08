@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 import Stage from './components/Stage';
  
+// TODO:constは別ファイルに移動。letで宣言している変数はuseStateに変更　
 type game = 1
 const GAME: game = 1;
 type gameOver = 0;
@@ -98,12 +99,16 @@ let speed: number;
 let oBlock: number[][];
 let block_current_x: number, block_current_y: number;
 let block_current_sx, block_current_sy;
-let blockType;
-let timer1;
+let blockType: number;
+let timer1: NodeJS.Timeout;
 let FPS: number;
 let clearLine: number;
 
+/**
+ * 初期化
+ */
 const initGame = () => {
+  clearTimeout(timer1);
   FPS = 30;
   clearLine = 0;
   let canvasDom = document.getElementById("canvas")!;
@@ -132,6 +137,9 @@ const newGame = () => {
   mainLoop();
 }
 
+/**
+ * ステージ設定
+ */
 const setStage = () => {
   for (let i = 0; i < BLOCK_RAWS; i++) {
     field[i] = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
@@ -149,6 +157,10 @@ const setStage = () => {
   }
 }
 
+/**
+ * 新しいブロックを作成
+ * @returns 
+ */
 const createBlock = () => {
   if (mode === EFFECT) return;
   block_current_x = block_current_sx = Math.floor(BLOCK_COLS / 3);
@@ -168,6 +180,10 @@ const createBlock = () => {
   putBlock();
 }
 
+/**
+ * ブロックを消去する
+ * @returns 
+ */
 const clearBlock = () => {
   if (mode === EFFECT) return;
   for (let i = 0; i < 4; i++) {
@@ -177,6 +193,44 @@ const clearBlock = () => {
   }
 }
 
+/**
+ * ブロックの回転処理
+ * @returns 
+ */
+const rotateBlock = (): 0 | void => {
+  if (mode === EFFECT) return;
+  clearBlock();
+  let tBlock = [
+    [0, 0, 0, 0],
+    [0, 0, 0, 0],
+    [0, 0, 0, 0],
+    [0, 0, 0, 0]
+  ];
+  for (let i = 0; i < 4; i++) {
+    for (let j = 0; j < 4; j++) {
+      tBlock[i][j] = oBlock[i][j];
+    }
+  }
+  for (let i = 0; i < 4; i++) {
+    for (let j = 0; j < 4; j++) {
+      oBlock[i][j] = tBlock[3 - j][i];
+    }
+  }
+  if (hitCheck()) {
+    for (let i = 0; i < 4; i++) {
+      for (let j = 0; j < 4; j++) {
+        oBlock[i][j] = tBlock[i][j];
+      }
+    }
+  }
+  putBlock();
+  return 0;
+}
+
+/**
+ * ブロックをロック（動かせないように）する
+ * @returns 
+ */
 const lockBlock = () => {
   if (mode === EFFECT) return;
   for (let i = 0; i < 4; i++) {
@@ -186,6 +240,10 @@ const lockBlock = () => {
   }
 }
 
+/**
+ * ブロックの当たり判定処理（移動できるか？落下できるか？）
+ * @returns 
+ */
 const hitCheck = (): 1 | void => {
   if (mode === EFFECT) return;
   for (let i = 0; i < 4; i++) {
@@ -195,6 +253,9 @@ const hitCheck = (): 1 | void => {
   }
 }
 
+/**
+ * ラインが揃ったかチェックする
+ */
 const lineCheck = (): number | void => {
   if (mode === EFFECT) return;
   let count;
@@ -216,6 +277,10 @@ const lineCheck = (): number | void => {
   return lineCount;
 }
 
+/**
+ * ブロックをステージにセットする
+ * @returns 
+ */
 const putBlock = () => {
   if (mode === EFFECT) return;
   for (let i = 0; i < 4; i++) {
@@ -225,7 +290,9 @@ const putBlock = () => {
   }
 }
 
-
+/**
+ * ゲーム画面クリア
+ */
 const clearWindow = () => {
   if (g instanceof CanvasRenderingContext2D) {
     g.fillStyle = BACK_COLOR;
@@ -234,6 +301,9 @@ const clearWindow = () => {
 
 }
 
+/**
+ * 画面描画
+ */
 const draw = () => {
   clearWindow();
 
@@ -275,6 +345,9 @@ const draw = () => {
   }
 }
 
+/**
+ * メインループ
+ */
 const mainLoop = () => {
   if (mode === GAME) {
     block_current_sx = block_current_x;
@@ -307,7 +380,43 @@ const mainLoop = () => {
   timer1 = setTimeout(mainLoop, 1000/FPS);
 }
 
+/**
+ * 操作用の関数
+ */
+const keyDownFunc = (e: KeyboardEvent) => {
+  if (mode === EFFECT) return;
+  if (mode === GAME) {
+    clearBlock();
+    block_current_sx = block_current_x;
+    block_current_sy = block_current_y;
+    // 元ソースコードはkeyCodeを使用していたが、現在は非推奨となっているためkeyを使用して判定
+    if (e.key === " " || e.key === "ArrowUp") {
+      rotateBlock();
+    }
+    else if (e.key === "ArrowLeft") {
+      block_current_x--;
+    }
+    else if (e.key === "ArrowRight") {
+      block_current_x++;
+    }
+    else if (e.key === "ArrowDown") {
+      block_current_y++;
+    }
+    if (hitCheck()) {
+      block_current_x = block_current_sx;
+      block_current_y = block_current_sy;
+    }
+    putBlock();
+  } 
+  else if (mode === GAMEOVER) {
+    if (e.key === "Enter") {
+      newGame();
+    }
+  }
+}
+
 const App: React.VFC = () => {
+  window.addEventListener('keydown', keyDownFunc, false);
   useEffect(() => {
     console.log("game start");
     initGame();
