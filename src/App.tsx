@@ -27,6 +27,13 @@ const ERROR_COLOR = "tomato";           // エラーブロックの色
 const EFFECT_COLOR1 = "whitesmoke";     // エフェクト時の色1
 const EFFECT_COLOR2 = "#000";      
 
+// エフェクト
+const EFFECT_ANIMATION = 2; // エフェクト時のちかちかする回数
+// ゲーム要素
+const NEXTLEVEL = 10;                   // 次のレベルまでの消去ライン数
+   
+  
+
 const SCREEN_WIDTH = BLOCK_SIZE * BLOCK_COLS;
 const SCREEN_HEIGTH = BLOCK_SIZE * BLOCK_RAWS;
 const block =	 [ 
@@ -116,12 +123,12 @@ const initGame = () => {
     canvasDom.width = SCREEN_WIDTH;
     canvasDom.height = SCREEN_HEIGTH;
     g = canvasDom.getContext("2d");
-    // TODO:エフェクトせってい
+    // エフェクト設定
     effectState.flipFlop = 0;
     effectState.speed = 4;
     effectState.count = 0;
+    // ブロックの設定
     blockSize = BLOCK_SIZE;
-    
   } else {
     throw new Error("#canvas is not an HTMLCanvasElement");
   }
@@ -269,12 +276,31 @@ const lineCheck = (): number | void => {
     if (count >= BLOCK_COLS) {
       lineCount++;
       clearLine++;
-      for (let j = 0; j < BLOCK_COLS - 1; j++) field[i][j] = CLEAR_BLOCK;
+      for (let j = 1; j < BLOCK_COLS - 1; j++) field[i][j] = CLEAR_BLOCK;
       console.log("lineCount = " + lineCount);
       console.log("clearLine = " + clearLine);
     }
   }
   return lineCount;
+}
+
+/**
+ * そろったラインを消去する
+ * @returns 
+ */
+const deleteLine = () => {
+  if (mode === EFFECT) return;
+  for (let i = BLOCK_RAWS - 1; i >= 1; i--) {
+    for (let j = 1; j < BLOCK_COLS - 1; j++) {
+      if (field[i][j] === CLEAR_BLOCK) {
+        field[i][j] = field[i - 1][j];
+        for (let above = i - 1; above >= 1; above--) {
+          field[above][j] = field[above - 1][j];
+        }
+        i++;
+      }
+    }
+  }
 }
 
 /**
@@ -306,7 +332,7 @@ const clearWindow = () => {
  */
 const draw = () => {
   clearWindow();
-
+  console.log(field);
   for (let i = 0; i < BLOCK_RAWS; i++) {
     for (let j = 0; j < BLOCK_COLS; j++) {
       switch (field[i][j]) {
@@ -346,6 +372,34 @@ const draw = () => {
 }
 
 /**
+ * ラインを消去するときのエフェクト
+ */
+const gameEffect = () => {
+  let colos = [ EFFECT_COLOR1, EFFECT_COLOR2];
+
+  if (g instanceof CanvasRenderingContext2D) {
+    g.fillStyle = colos[effectState.flipFlop];
+    for (let i = 0; i < BLOCK_RAWS; i++) {
+      for (let j = 0; j < BLOCK_COLS; j++) {
+        if (field[i][j] === CLEAR_BLOCK) {
+          g.fillRect(j * blockSize, i * blockSize, blockSize - 1, blockSize - 1);
+        }
+      }
+    }
+    effectState.flipFlop = 1 - effectState.flipFlop;
+
+    if (effectState.count > EFFECT_ANIMATION) {
+      mode = GAME;
+      effectState.count = 0;
+      effectState.flipFlop = 0;
+      deleteLine();
+      createBlock();
+    }
+    effectState.count++;
+  }
+}
+
+/**
  * メインループ
  */
 const mainLoop = () => {
@@ -372,7 +426,7 @@ const mainLoop = () => {
   }
   else if (mode === EFFECT) {
     if (frame % effectState.speed === 0) {
-      
+      gameEffect();
     }
   }
   frame++;
