@@ -32,7 +32,7 @@ const EFFECT_ANIMATION = 2; // エフェクト時のちかちかする回数
 // ゲーム要素
 const NEXTLEVEL = 10;                   // 次のレベルまでの消去ライン数
    
-  
+
 
 const SCREEN_WIDTH = BLOCK_SIZE * BLOCK_COLS;
 const SCREEN_HEIGTH = BLOCK_SIZE * BLOCK_RAWS;
@@ -332,7 +332,6 @@ const clearWindow = () => {
  */
 const draw = () => {
   clearWindow();
-  console.log(field);
   for (let i = 0; i < BLOCK_RAWS; i++) {
     for (let j = 0; j < BLOCK_COLS; j++) {
       switch (field[i][j]) {
@@ -399,6 +398,19 @@ const gameEffect = () => {
   }
 }
 
+const gameOver = () => {
+  for (let i = 0; i < BLOCK_RAWS; i++) {
+    for (let j = 0; j < BLOCK_COLS; j++) {
+      if (field[i][j] && field[i][j] !== WALL) {
+        if (g instanceof CanvasRenderingContext2D) {
+          g.fillStyle = GAMEOVER_COLOR;
+          g.fillRect(j * blockSize, i * blockSize, blockSize - 1, blockSize - 1);
+        }
+      }
+    }
+  }
+}
+
 /**
  * メインループ
  */
@@ -422,7 +434,7 @@ const mainLoop = () => {
     draw();
   }
   else if (mode === GAMEOVER) {
-
+    gameOver();
   }
   else if (mode === EFFECT) {
     if (frame % effectState.speed === 0) {
