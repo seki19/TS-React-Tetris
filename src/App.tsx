@@ -1,8 +1,8 @@
-import React, { useEffect } from 'react';
-import Stage from './components/Stage';
- 
-// TODO:constは別ファイルに移動。letで宣言している変数はuseStateに変更　
-type game = 1
+import React, { useEffect } from "react";
+import Stage from "./components/Stage";
+
+// TODO:constは別ファイルに移動。letで宣言している変数はuseStateに変更
+type game = 1;
 const GAME: game = 1;
 type gameOver = 0;
 const GAMEOVER: gameOver = 0;
@@ -18,62 +18,74 @@ const LOCK_BLOCK = 2;
 const CLEAR_BLOCK = 3;
 const WALL = 9;
 
-const BACK_COLOR = "#ddd";              // 背景色
+const BACK_COLOR = "#ddd"; // 背景色
 const GAMEOVER_COLOR = "palevioletred"; // ゲームオーバー時のブロックの色
-const BLOCK_COLOR = "steelblue";            // 操作ブロックの色
-const LOCK_COLOR = "lightslategray";        // ロックしたブロックの色
-const WALL_COLOR = "#666";              // 壁の色
-const ERROR_COLOR = "tomato";           // エラーブロックの色
-const EFFECT_COLOR1 = "whitesmoke";     // エフェクト時の色1
-const EFFECT_COLOR2 = "#000";      
+const BLOCK_COLOR = "steelblue"; // 操作ブロックの色
+const LOCK_COLOR = "lightslategray"; // ロックしたブロックの色
+const WALL_COLOR = "#666"; // 壁の色
+const ERROR_COLOR = "tomato"; // エラーブロックの色
+const EFFECT_COLOR1 = "whitesmoke"; // エフェクト時の色1
+const EFFECT_COLOR2 = "#000";
 
 // エフェクト
 const EFFECT_ANIMATION = 2; // エフェクト時のちかちかする回数
 // ゲーム要素
-const NEXTLEVEL = 10;                   // 次のレベルまでの消去ライン数
-   
-
+const NEXTLEVEL = 10; // 次のレベルまでの消去ライン数
 
 const SCREEN_WIDTH = BLOCK_SIZE * BLOCK_COLS;
 const SCREEN_HEIGTH = BLOCK_SIZE * BLOCK_RAWS;
-const block =	 [ 
-  [ [0, 0, 0, 0],
+const block = [
+  [
+    [0, 0, 0, 0],
     [0, 1, 1, 0],
     [0, 1, 1, 0],
-    [0, 0, 0, 0]],
-  
-  [	[0, 1, 0, 0],
-    [0, 1, 0, 0],
-    [0, 1, 0, 0],
-    [0, 1, 0, 0]],
+    [0, 0, 0, 0],
+  ],
 
-  [	[0, 0, 1, 0],
+  [
+    [0, 1, 0, 0],
+    [0, 1, 0, 0],
+    [0, 1, 0, 0],
+    [0, 1, 0, 0],
+  ],
+
+  [
+    [0, 0, 1, 0],
     [0, 1, 1, 0],
     [0, 1, 0, 0],
-    [0, 0, 0, 0]],
+    [0, 0, 0, 0],
+  ],
 
-  [	[0, 1, 0, 0],
+  [
+    [0, 1, 0, 0],
     [0, 1, 1, 0],
     [0, 0, 1, 0],
-    [0, 0, 0, 0]],
+    [0, 0, 0, 0],
+  ],
 
-  [	[0, 0, 0, 0],
+  [
+    [0, 0, 0, 0],
     [0, 1, 1, 0],
     [0, 1, 0, 0],
-    [0, 1, 0, 0]],
+    [0, 1, 0, 0],
+  ],
 
-  [	[0, 0, 0, 0],
+  [
+    [0, 0, 0, 0],
     [0, 1, 1, 0],
     [0, 0, 1, 0],
-    [0, 0, 1, 0]],
+    [0, 0, 1, 0],
+  ],
 
-  [	[0, 0, 0, 0],
+  [
+    [0, 0, 0, 0],
     [0, 1, 0, 0],
     [1, 1, 1, 0],
-    [0, 0, 0, 0]]
-  ];
+    [0, 0, 0, 0],
+  ],
+];
 const stage = [
-  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],	// ←表示しない
+  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], // ←表示しない
   [9, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 9],
   [9, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 9],
   [9, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 9],
@@ -94,11 +106,12 @@ const stage = [
   [9, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 9],
   [9, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 9],
   [9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9],
-  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]];	// ←表示しない
+  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+]; // ←表示しない
 
 let g: CanvasRenderingContext2D | null;
 let mode: game | gameOver | gameEffect;
-let effectState = {flipFlop: 0, speed: 0, count: 0};
+let effectState = { flipFlop: 0, speed: 0, count: 0 };
 let blockSize: number;
 let field: number[][] = new Array();
 let frame: number;
@@ -132,7 +145,7 @@ const initGame = () => {
   } else {
     throw new Error("#canvas is not an HTMLCanvasElement");
   }
-}
+};
 
 const newGame = () => {
   setStage();
@@ -142,7 +155,7 @@ const newGame = () => {
   // clearTimeout
   createBlock();
   mainLoop();
-}
+};
 
 /**
  * ステージ設定
@@ -155,18 +168,18 @@ const setStage = () => {
     [0, 0, 0, 0],
     [0, 0, 0, 0],
     [0, 0, 0, 0],
-    [0, 0, 0, 0]
+    [0, 0, 0, 0],
   ];
   for (let i = 0; i < BLOCK_RAWS; i++) {
     for (let j = 0; j < BLOCK_COLS; j++) {
       field[i][j] = stage[i][j];
     }
   }
-}
+};
 
 /**
  * 新しいブロックを作成
- * @returns 
+ * @returns
  */
 const createBlock = () => {
   if (mode === EFFECT) return;
@@ -185,24 +198,25 @@ const createBlock = () => {
     console.log("GAMEOVER!");
   }
   putBlock();
-}
+};
 
 /**
  * ブロックを消去する
- * @returns 
+ * @returns
  */
 const clearBlock = () => {
   if (mode === EFFECT) return;
   for (let i = 0; i < 4; i++) {
-    for (let j = 0; j < 4; j++ ) {
-      if (oBlock[i][j]) field[i + block_current_y][j + block_current_x] = NON_BLOCK;
+    for (let j = 0; j < 4; j++) {
+      if (oBlock[i][j])
+        field[i + block_current_y][j + block_current_x] = NON_BLOCK;
     }
   }
-}
+};
 
 /**
  * ブロックの回転処理
- * @returns 
+ * @returns
  */
 const rotateBlock = (): 0 | void => {
   if (mode === EFFECT) return;
@@ -211,7 +225,7 @@ const rotateBlock = (): 0 | void => {
     [0, 0, 0, 0],
     [0, 0, 0, 0],
     [0, 0, 0, 0],
-    [0, 0, 0, 0]
+    [0, 0, 0, 0],
   ];
   for (let i = 0; i < 4; i++) {
     for (let j = 0; j < 4; j++) {
@@ -232,33 +246,35 @@ const rotateBlock = (): 0 | void => {
   }
   putBlock();
   return 0;
-}
+};
 
 /**
  * ブロックをロック（動かせないように）する
- * @returns 
+ * @returns
  */
 const lockBlock = () => {
   if (mode === EFFECT) return;
   for (let i = 0; i < 4; i++) {
     for (let j = 0; j < 4; j++) {
-      if (oBlock[i][j]) field[i + block_current_y][j + block_current_x] = LOCK_BLOCK;
+      if (oBlock[i][j])
+        field[i + block_current_y][j + block_current_x] = LOCK_BLOCK;
     }
   }
-}
+};
 
 /**
  * ブロックの当たり判定処理（移動できるか？落下できるか？）
- * @returns 
+ * @returns
  */
 const hitCheck = (): 1 | void => {
   if (mode === EFFECT) return;
   for (let i = 0; i < 4; i++) {
     for (let j = 0; j < 4; j++) {
-      if (field[i + block_current_y][j + block_current_x] && oBlock[i][j]) return 1;
+      if (field[i + block_current_y][j + block_current_x] && oBlock[i][j])
+        return 1;
     }
   }
-}
+};
 
 /**
  * ラインが揃ったかチェックする
@@ -282,11 +298,11 @@ const lineCheck = (): number | void => {
     }
   }
   return lineCount;
-}
+};
 
 /**
  * そろったラインを消去する
- * @returns 
+ * @returns
  */
 const deleteLine = () => {
   if (mode === EFFECT) return;
@@ -301,20 +317,21 @@ const deleteLine = () => {
       }
     }
   }
-}
+};
 
 /**
  * ブロックをステージにセットする
- * @returns 
+ * @returns
  */
 const putBlock = () => {
   if (mode === EFFECT) return;
   for (let i = 0; i < 4; i++) {
     for (let j = 0; j < 4; j++) {
-      if (oBlock[i][j]) field[i + block_current_y][j + block_current_x] = oBlock[i][j];
+      if (oBlock[i][j])
+        field[i + block_current_y][j + block_current_x] = oBlock[i][j];
     }
   }
-}
+};
 
 /**
  * ゲーム画面クリア
@@ -324,8 +341,7 @@ const clearWindow = () => {
     g.fillStyle = BACK_COLOR;
     g.fillRect(0, 0, SCREEN_WIDTH, SCREEN_HEIGTH);
   }
-
-}
+};
 
 /**
  * 画面描画
@@ -365,23 +381,29 @@ const draw = () => {
             g.fillStyle = ERROR_COLOR;
           }
       }
-      if (g instanceof CanvasRenderingContext2D) g.fillRect(j * blockSize, i * blockSize, blockSize - 1, blockSize - 1);
+      if (g instanceof CanvasRenderingContext2D)
+        g.fillRect(j * blockSize, i * blockSize, blockSize - 1, blockSize - 1);
     }
   }
-}
+};
 
 /**
  * ラインを消去するときのエフェクト
  */
 const gameEffect = () => {
-  let colos = [ EFFECT_COLOR1, EFFECT_COLOR2];
+  let colos = [EFFECT_COLOR1, EFFECT_COLOR2];
 
   if (g instanceof CanvasRenderingContext2D) {
     g.fillStyle = colos[effectState.flipFlop];
     for (let i = 0; i < BLOCK_RAWS; i++) {
       for (let j = 0; j < BLOCK_COLS; j++) {
         if (field[i][j] === CLEAR_BLOCK) {
-          g.fillRect(j * blockSize, i * blockSize, blockSize - 1, blockSize - 1);
+          g.fillRect(
+            j * blockSize,
+            i * blockSize,
+            blockSize - 1,
+            blockSize - 1
+          );
         }
       }
     }
@@ -396,7 +418,7 @@ const gameEffect = () => {
     }
     effectState.count++;
   }
-}
+};
 
 const gameOver = () => {
   for (let i = 0; i < BLOCK_RAWS; i++) {
@@ -404,12 +426,17 @@ const gameOver = () => {
       if (field[i][j] && field[i][j] !== WALL) {
         if (g instanceof CanvasRenderingContext2D) {
           g.fillStyle = GAMEOVER_COLOR;
-          g.fillRect(j * blockSize, i * blockSize, blockSize - 1, blockSize - 1);
+          g.fillRect(
+            j * blockSize,
+            i * blockSize,
+            blockSize - 1,
+            blockSize - 1
+          );
         }
       }
     }
   }
-}
+};
 
 /**
  * メインループ
@@ -432,19 +459,17 @@ const mainLoop = () => {
       putBlock();
     }
     draw();
-  }
-  else if (mode === GAMEOVER) {
+  } else if (mode === GAMEOVER) {
     gameOver();
-  }
-  else if (mode === EFFECT) {
+  } else if (mode === EFFECT) {
     if (frame % effectState.speed === 0) {
       gameEffect();
     }
   }
   frame++;
   if (speed < 1) speed = 1;
-  timer1 = setTimeout(mainLoop, 1000/FPS);
-}
+  timer1 = setTimeout(mainLoop, 1000 / FPS);
+};
 
 /**
  * 操作用の関数
@@ -458,14 +483,11 @@ const keyDownFunc = (e: KeyboardEvent) => {
     // 元ソースコードはkeyCodeを使用していたが、現在は非推奨となっているためkeyを使用して判定
     if (e.key === " " || e.key === "ArrowUp") {
       rotateBlock();
-    }
-    else if (e.key === "ArrowLeft") {
+    } else if (e.key === "ArrowLeft") {
       block_current_x--;
-    }
-    else if (e.key === "ArrowRight") {
+    } else if (e.key === "ArrowRight") {
       block_current_x++;
-    }
-    else if (e.key === "ArrowDown") {
+    } else if (e.key === "ArrowDown") {
       block_current_y++;
     }
     if (hitCheck()) {
@@ -473,21 +495,20 @@ const keyDownFunc = (e: KeyboardEvent) => {
       block_current_y = block_current_sy;
     }
     putBlock();
-  } 
-  else if (mode === GAMEOVER) {
+  } else if (mode === GAMEOVER) {
     if (e.key === "Enter") {
       newGame();
     }
   }
-}
+};
 
 const App: React.VFC = () => {
-  window.addEventListener('keydown', keyDownFunc, false);
+  window.addEventListener("keydown", keyDownFunc, false);
   useEffect(() => {
     console.log("game start");
     initGame();
     newGame();
-  }, [])
+  }, []);
 
   return (
     <React.Fragment>
@@ -495,6 +516,6 @@ const App: React.VFC = () => {
       <Stage></Stage>
     </React.Fragment>
   );
-}
+};
 
 export default App;
