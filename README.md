@@ -9,7 +9,7 @@ React と TS の学習を兼ねてテトリスを実装する。
 
 ## 実行方法
 
-node と npm がインストール後、以下のコマンドを実行する
+node と npm をインストール後、以下のコマンドを実行する
 
 ```
 git clone https://github.com/seki19/TS-React-Tetris.git
